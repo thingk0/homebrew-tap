@@ -1,60 +1,49 @@
-# brew tap-new uses this file to generate a PR test workflow for the new tap
-name: brew test-bot
+name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-
-permissions: {}
-
-defaults:
-  run:
-    shell: bash -xeuo pipefail {0}
+    branches: [ main ]
 
 jobs:
-  test-bot:
-    strategy:
-      matrix:
-        os: [ macos-26 ]
-        include:
-          - os: ubuntu-latest
-            container:
-              image: ghcr.io/homebrew/brew:main
-              options: --privileged
-    runs-on: ${{ matrix.os }}
-    container: ${{ fromJSON(toJSON(matrix.container)) }} # zizmor: ignore[unpinned-images]
-    permissions:
-      actions: read
-      checks: read
-      contents: read
-      pull-requests: read
+  test-tap:
+    name: Test Formula (macOS)
+    runs-on: macos-14
+
     steps:
       - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@3cdb78d0f62ad29dd32de765782654f4eedea607 # 2026.08.31.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Cache Homebrew Bundler RubyGems
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.set-up-homebrew.outputs.gems-path }}
-          key: ${{ matrix.os }}-rubygems-${{ steps.set-up-homebrew.outputs.gems-hash }}
-          restore-keys: ${{ matrix.os }}-rubygems-
+      - name: Audit Formula
+        run: |
+          brew audit thingk0/tap/macbay
 
-      - run: brew test-bot --only-cleanup-before
+      - name: Build and install from source
+        run: |
+          brew install --build-from-source thingk0/tap/macbay
 
-      - run: brew test-bot --only-setup
+      - name: Run brew test
+        run: |
+          brew test thingk0/tap/macbay
 
-      - run: brew test-bot --only-tap-syntax
-      - run: brew test-bot --only-formulae
-        if: github.event_name == 'pull_request'
+      - name: Verify CLI executables and help
+        run: |
+          mb --version
+          macbay --version
+          mb --help
 
-      - name: Upload bottles as artifact
-        if: always() && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: bottles_${{ matrix.os }}
-          path: '*.bottle.*'
+      - name: Verify clean command rejection
+        run: |
+          if mb clean; then
+            echo "Expected 'mb clean' to fail, but it succeeded!"
+            exit 1
+          else
+            echo "'mb clean' failed as expected."
+          fi
+
+      - name: Test uninstall
+        run: |
+          brew uninstall macbay
+          ! which mb
+          ! which macbay

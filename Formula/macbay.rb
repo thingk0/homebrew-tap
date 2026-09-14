@@ -4,7 +4,7 @@ class Macbay < Formula
   url "https://github.com/thingk0/macbay/archive/refs/tags/v1.6.0.tar.gz"
   sha256 "e45617d084c2909c988859dbefbe7cbbc944a16cb168452466823e2c4204967d"
   license "MIT"
-  head "https://github.com/thingk0/macbay.git", branch: "main"
+  head "https://github.com/thingk0/macbay.git", branch: "develop"
 
   depends_on xcode: ["15.0", :build]
   depends_on arch: :arm64
@@ -17,8 +17,13 @@ class Macbay < Formula
   end
 
   test do
-    assert_match "1.6.0", shell_output("#{bin}/mb --version")
-    assert_match "1.6.0", shell_output("#{bin}/macbay --version")
+    if build.head?
+      assert_match(/\d+\.\d+\.\d+(-dev)?/, shell_output("#{bin}/mb --version"))
+      assert_match(/\d+\.\d+\.\d+(-dev)?/, shell_output("#{bin}/macbay --version"))
+    else
+      assert_match "1.6.0", shell_output("#{bin}/mb --version")
+      assert_match "1.6.0", shell_output("#{bin}/macbay --version")
+    end
     assert_match "status", shell_output("#{bin}/mb --help")
   end
 end

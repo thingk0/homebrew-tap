@@ -1,8 +1,8 @@
 class Macbay < Formula
   desc "Developer-first macOS storage externalizer for Apple Silicon"
   homepage "https://github.com/thingk0/macbay"
-  url "https://github.com/thingk0/macbay/archive/refs/tags/v1.7.0.tar.gz"
-  sha256 "a31a342d39b5ad2466e6978dd8e21a270feb2c0d3320bd73e3de9e05f98e852b"
+  url "https://github.com/thingk0/macbay/archive/refs/tags/v1.8.0.tar.gz"
+  sha256 "0d68c954e2cfc1486baec0ff7f5b8d5b040e739d867756b5d0a371c70f67bc5e"
   license "MIT"
   head "https://github.com/thingk0/macbay.git", branch: "develop"
 
@@ -21,8 +21,8 @@ class Macbay < Formula
       assert_match(/\d+\.\d+\.\d+(-dev)?/, shell_output("#{bin}/mb --version"))
       assert_match(/\d+\.\d+\.\d+(-dev)?/, shell_output("#{bin}/macbay --version"))
     else
-      assert_match "1.7.0", shell_output("#{bin}/mb --version")
-      assert_match "1.7.0", shell_output("#{bin}/macbay --version")
+      assert_match "1.8.0", shell_output("#{bin}/mb --version")
+      assert_match "1.8.0", shell_output("#{bin}/macbay --version")
     end
     assert_match "status", shell_output("#{bin}/mb --help")
   end
